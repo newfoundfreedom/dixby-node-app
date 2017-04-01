@@ -1,5 +1,5 @@
 /**
- * Created by joel on 3/30/17.
+ * Created by Joel Roberts on 3/30/17.
  */
 
 // Access Modules
@@ -25,7 +25,7 @@ inquirer.prompt([
             myTweets();
             break;
         case 'Spotify Song Lookup':
-            let songTitle = 'shiny';
+            let songTitle = 'descenso';
             // inquirer.prompt(['What song would you like me to find information about?']).then(function (answers) {
             //     var song = answers;
             //     console.log(answer);
@@ -57,17 +57,23 @@ function spotifySongLookup(songTitle) {
             console.log('Error occurred: ' + err);
             return;
         }
-
         // get items array from JSON object
         let items = data.tracks.items;
 
         //for each track found, display the first artist name
-        for(var i = 0; i < items.length; i++){
-            let item = items[i],
-                artist = item.artists[0].name;
-            console.log(artist);
+        for (let i = 0; i < items.length; i++) {
+            let song = items[i],
+                artist = song.artists;
+            if (artist.length > 1) {
+                var artistsNames = [];
+                for (let j = 0; j < artist.length; j++) {
+                    artistsNames.push(artist[j].name);
+                }
+                console.log('   Artists: ' + artistsNames.toString());
+            } else {
+                console.log('   Artist: ' + song.artists[0].name);
+            }
         }
-
     })
 }
 
