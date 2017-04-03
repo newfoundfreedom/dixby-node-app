@@ -11,7 +11,10 @@ const keys = require('./keys.js'),
     colors = require('colors');
 
 // Global Variables
-let resultQty;
+let artistsName,
+    resultQty,
+    RTRating,
+    userSong;
 
 
 // Prompt user for function to run
@@ -25,28 +28,51 @@ inquirer.prompt([
 ]).then(function (data) {
 
     switch (data.choice) {
+        // if user chooses 'My Tweets' then ...
         case 'My Tweets':
             myTweets();
             break;
+        // if user chooses 'Spotify Song Lookup' then ...
         case 'Spotify Song Lookup':
+            // prompt user to supply a song title
             inquirer.prompt([
                 {
+                    message: "What's the song title?",
                     type: "input",
                     name: "title",
-                    message: "What's the song title?"
-                },
+                    // check to ensure that user didn't just hit enter
+                    validate: function validTitle(title) {
+                        if (title === '') {
+                            // if no input given then display error message until they supply a valid response
+                            console.log('\n  >> Please provide a valid song title'.red);
+                        }
+                        return title !== '';
+                    }
+                }
+                // once a valid response has been give - pass that response into the spotifySongLookup function
             ]).then(function (song_data) {
                 let songTitle = song_data.title;
                 spotifySongLookup(songTitle);
             });
             break;
+        // if user response is 'Movie Info'
         case 'Movies Info':
+            // prompt user to supply a movie title
             inquirer.prompt([
                 {
+                    message: "What movie would you like me to look up?",
                     type: "input",
                     name: "title",
-                    message: "What movie would you like me to look up?"
-                },
+                    // check to ensure that user didn't just hit enter
+                    validate: function validTitle(title) {
+                        if (title === '') {
+                            // if no input given then display error message until they supply a valid response
+                            console.log('\n  >> Please provide a valid movie title'.red);
+                        }
+                        return title !== '';
+                    }
+                }
+                // once a valid response has been give - pass that response into the movieInfo function
             ]).then(function (movie_data) {
                 let movieTitle = movie_data.title;
                 movieInfo(movieTitle);
@@ -78,6 +104,7 @@ function spotifySongLookup(songTitle) {
 
         // if no tracks are found based on user input, then ...
         if (data.tracks.items.length < 1) {
+            userSong = songTitle;
             // and suggest a cheezy 90's hit instead!
             spotifySongLookup('The Sign - Ace of Base');
         }
@@ -89,19 +116,18 @@ function spotifySongLookup(songTitle) {
                 // store number of tracks found
                 tracksFoundQty = items.length;
 
-
             // if users input yielded no results and 'Ace of Base' was substituted
             //  then set resultQty to just 1
             if (songTitle === 'The Sign - Ace of Base') {
                 // warn the user that their song was not found
-                console.log('\n !! I can\'t seem to locate the song your looking for.\n'.red +
-                    '      Why don\'t you check out this 90\'s pop sensation instead.\n'.red);
+                console.log('\n >> !! I can\'t seem to locate any song named "'.red + userSong.red + '"\n'.red +
+                    ' >> Why don\'t you check out this 90\'s pop sensation instead.\n'.red);
                 // limit the result to just the 'Ace of Base' suggestion
                 resultQty = 1;
             }
             // else if 3 or more songs were found, then limit the results to the top 3 songs
             else if (tracksFoundQty >= 3) {
-                console.log('\n    Here are the top 3 results for \''.cyan + songTitle.cyan + '\'\n');
+                console.log('\n  >> Here are the top 3 results for song title: "'.cyan + songTitle.cyan + '"\n'.cyan);
                 resultQty = 3;
             }
             // else if 1 or 2 songs are found, then limit results to the number found
@@ -128,11 +154,11 @@ function spotifySongLookup(songTitle) {
                         artistsArray.push(songArtists[j].name);
                     }
                     // once all artists names have been collected, then output that list as a string
-                    var artistsName = artistsArray.join(', ');
+                    artistsName = artistsArray.join(', ');
                 }
                 // else if only one artist then set capture the artist's name
                 else {
-                    var artistsName = songArtists[0].name;
+                    artistsName = songArtists[0].name;
                 }
 
                 //output results to the command line
@@ -150,8 +176,7 @@ function spotifySongLookup(songTitle) {
 
 function movieInfo(movieTitle) {
 
-    // If movie title is more than one word, then place a '+' between each for
-    //   URL call
+    // If movie title is more than one word, then place a '+' between each for URL call
     let movieArray = movieTitle.split(' ').join('+');
 
     // Obtain a JSON object utilizing the request module
@@ -159,13 +184,10 @@ function movieInfo(movieTitle) {
 
         // If there were no errors and the response code was successful
         if (!error && response.statusCode === 200) {
-            // set object to movie variab
-            // le
+            // set object to movie variable
             let movie = JSON.parse(body);
 
             // print movie data obtained from object on command line
-            // console.log('\n\n\nMovie Info'.blue);
-            // console.log('\n\nMOVIE INFO ============'.bold);
             console.log('\n           Movie Title: '.cyan + movie.Title);
             console.log('                  Year: '.cyan + movie.Year);
             console.log('                  Plot: '.cyan + movie.Plot);
@@ -173,12 +195,22 @@ function movieInfo(movieTitle) {
             console.log('               Country: '.cyan + movie.Country);
             console.log('              Language: '.cyan + movie.Language);
             console.log('           IMDB Rating: '.cyan + movie.imdbRating);
-            console.log('Rotten Tomatoes Rating: '.cyan + movie.Ratings[1].Value);
+            // loop through the ratings array and check to see if the Rotten Tomatoes rating exists
+            for (let i = 0; i < movie.Ratings.length; i++) {
+                // if it does, set variable RTRating equal to the Rotten Tomatoes rating value and report
+                if (movie.Ratings[i].Source === 'Rotten Tomatoes') {
+                    RTRating = movie.Ratings[i].Value;
+                    console.log('Rotten Tomatoes Rating: '.cyan + RTRating);
+                }
+            }
+            // if no Rotten Tomatoes rating was found, then report that its Not Available
+            if (typeof RTRating === 'undefined') {
+                console.log('Rotten Tomatoes Rating: '.cyan + 'N/A')
+            }
             console.log('  Rotten Tomatoes Link: '.cyan + movie.tomatoURL + '\n');
-        }
-    });
-
-}
+        } // end if - response was successful
+    }); // end OMDB request
+} // end movieInfo function
 
 
 function doWhatSays() {
