@@ -10,7 +10,8 @@ const keys = require('./keys.js'),
     inquirer = require('inquirer'),
     spotify = require('spotify'),
     request = require('request'),
-    colors = require('colors');
+    colors = require('colors'),
+    moment = require('moment');
 
 // Global Variables
 let artistsName,
@@ -91,9 +92,32 @@ inquirer.prompt([
 
 // TWITTER FUNCTION //
 function myTweets() {
-    console.log('This is where I will do my tweet lookup and reporting');
-}
 
+    let client = new twitter({
+        consumer_key: keys.twitterKeys.consumer_key,
+        consumer_secret: keys.twitterKeys.consumer_secret,
+        access_token_key: keys.twitterKeys.access_token_key,
+        access_token_secret: keys.twitterKeys.access_token_secret
+    });
+
+    let params = {
+        screen_name: 'newfoundfreedom',
+        count: 20
+    };
+
+    client.get('statuses/user_timeline', params, function (error, tweets, response) {
+        if (error) {
+            throw error;
+        }
+        else {
+            for (let i = 0; i < tweets.length; i++) {
+                let timeDate = moment(tweets[i].created_at, 'ddd MMM DD HH:mm:ss Y YYYY').format('LLL');
+                    tweetText = tweets[i].text;
+                console.log('\n' + timeDate.cyan + '\n' + tweetText)
+            }
+        }
+    });
+}
 
 
 // SPOTIFY FUNCTION //
@@ -178,7 +202,6 @@ function spotifySongLookup(songTitle) {
 } // end spotifySongLookup function
 
 
-
 // OMDB FUNCTION //
 // function searches OMDB for user specified movie.  If results are found, then movie data is shown.
 function movieInfo(movieTitle) {
@@ -204,7 +227,7 @@ function movieInfo(movieTitle) {
                 // set object to movie variable
                 let movie = JSON.parse(body);
 
-                if(movieTitle !== 'Mr Nobody'){
+                if (movieTitle !== 'Mr Nobody') {
                     console.log('\n >> Here is the information I found for "'.cyan + movieTitle.cyan.bold + '"\n'.cyan)
                 }
 
@@ -236,17 +259,12 @@ function movieInfo(movieTitle) {
 } // end movieInfo function
 
 
-
 // READ TXT FILE FOR INSTRUCTIONS FUNCTION \\
 function doWhatSays() {
     fs.readFile('random.txt', 'utf8', function (err, data) {
         console.log(`\nThis is the contents of random.txt:  ${data} \n`);
     });
 }
-
-
-
-
 
 
 
