@@ -1,6 +1,8 @@
 // Created by Joel Roberts on 3/30/17.
 
 
+// GLOBAL SETTINGS /////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // Access Modules
 const keys = require('./keys.js'),
     fs = require('fs'),
@@ -13,9 +15,10 @@ const keys = require('./keys.js'),
 // Global Variables
 let artistsName,
     resultQty,
-    RTRating,
-    userSong;
+    RTRating;
 
+
+// INITIAL USER INTERFACE //////////////////////////////////////////////////////////////////////////////////////////////
 
 // Prompt user for function to run
 inquirer.prompt([
@@ -26,7 +29,6 @@ inquirer.prompt([
         name: "choice"
     }
 ]).then(function (data) {
-
     switch (data.choice) {
         // if user chooses 'My Tweets' then ...
         case 'My Tweets':
@@ -85,13 +87,17 @@ inquirer.prompt([
 }); // end then
 
 
+// FUNCTION OPTIONS ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// TWITTER FUNCTION //
 function myTweets() {
     console.log('This is where I will do my tweet lookup and reporting');
 }
 
 
-// function to search Spotify for user specified song.  If results are found,
-//   then the top 3 songs will be shown.
+
+// SPOTIFY FUNCTION //
+// function searches Spotify for user specified song.  If results are found, then the top 3 songs will be shown.
 function spotifySongLookup(songTitle) {
 
     // query spotify for song specified by user
@@ -104,7 +110,9 @@ function spotifySongLookup(songTitle) {
 
         // if no tracks are found based on user input, then ...
         if (data.tracks.items.length < 1) {
-            userSong = songTitle;
+            // warn the user that their song was not found
+            console.log('\n >> !! I can\'t seem to locate any song named "'.red + songTitle.red + '"\n'.red +
+                ' >> Why don\'t you check out this 90\'s pop sensation instead.\n'.red);
             // and suggest a cheezy 90's hit instead!
             spotifySongLookup('The Sign - Ace of Base');
         }
@@ -117,22 +125,18 @@ function spotifySongLookup(songTitle) {
                 tracksFoundQty = items.length;
 
             // if users input yielded no results and 'Ace of Base' was substituted
-            //  then set resultQty to just 1
             if (songTitle === 'The Sign - Ace of Base') {
-                // warn the user that their song was not found
-                console.log('\n >> !! I can\'t seem to locate any song named "'.red + userSong.red + '"\n'.red +
-                    ' >> Why don\'t you check out this 90\'s pop sensation instead.\n'.red);
-                // limit the result to just the 'Ace of Base' suggestion
+                //  then set resultQty to just 1
                 resultQty = 1;
             }
-            // else if 3 or more songs were found, then limit the results to the top 3 songs
+            // if 3 or more songs were found, then limit the results to the top 3 songs
             else if (tracksFoundQty >= 3) {
-                console.log('\n  >> Here are the top 3 results for song title: "'.cyan + songTitle.cyan + '"\n'.cyan);
+                console.log('\n  >> Here are the top 3 results for "'.cyan + songTitle.cyan.bold + '"\n'.cyan);
                 resultQty = 3;
             }
-            // else if 1 or 2 songs are found, then limit results to the number found
+            // if 1 or 2 songs are found, then limit results to the number found
             else if (tracksFoundQty !== 0) {
-                console.log('\n    Here are the top results for \''.cyan + songTitle.cyan + '\'\n');
+                console.log('\n    Here are the top results for \''.cyan + songTitle.cyan.bold + '\'\n');
                 resultQty = tracksFoundQty;
             }
 
@@ -174,6 +178,9 @@ function spotifySongLookup(songTitle) {
 } // end spotifySongLookup function
 
 
+
+// OMDB FUNCTION //
+// function searches OMDB for user specified movie.  If results are found, then movie data is shown.
 function movieInfo(movieTitle) {
 
     // If movie title is more than one word, then place a '+' between each for URL call
@@ -184,35 +191,53 @@ function movieInfo(movieTitle) {
 
         // If there were no errors and the response code was successful
         if (!error && response.statusCode === 200) {
-            // set object to movie variable
-            let movie = JSON.parse(body);
 
-            // print movie data obtained from object on command line
-            console.log('\n           Movie Title: '.cyan + movie.Title);
-            console.log('                  Year: '.cyan + movie.Year);
-            console.log('                  Plot: '.cyan + movie.Plot);
-            console.log('                Actors: '.cyan + movie.Actors);
-            console.log('               Country: '.cyan + movie.Country);
-            console.log('              Language: '.cyan + movie.Language);
-            console.log('           IMDB Rating: '.cyan + movie.imdbRating);
-            // loop through the ratings array and check to see if the Rotten Tomatoes rating exists
-            for (let i = 0; i < movie.Ratings.length; i++) {
-                // if it does, set variable RTRating equal to the Rotten Tomatoes rating value and report
-                if (movie.Ratings[i].Source === 'Rotten Tomatoes') {
-                    RTRating = movie.Ratings[i].Value;
-                    console.log('Rotten Tomatoes Rating: '.cyan + RTRating);
+            // if users movie is not found - suggest checkout 'Mr. Nobody'
+            if (JSON.parse(body).Error === 'Movie not found!') {
+                // warn the user that their song was not found
+                console.log('\n >> !! I can\'t seem to locate the movie "'.red + movieTitle.red.bold + '"\n'.red +
+                    ' >> But, you should stop whatever your doing to watch this movie instead.\n'.red);
+                // pass in 'Mr. Nobody' to the movieInfo function instead
+                movieInfo('Mr Nobody')
+            }
+            else {
+                // set object to movie variable
+                let movie = JSON.parse(body);
+
+                if(movieTitle !== 'Mr Nobody'){
+                    console.log('\n >> Here is the information I found for "'.cyan + movieTitle.cyan.bold + '"\n'.cyan)
                 }
-            }
-            // if no Rotten Tomatoes rating was found, then report that its Not Available
-            if (typeof RTRating === 'undefined') {
-                console.log('Rotten Tomatoes Rating: '.cyan + 'N/A')
-            }
-            console.log('  Rotten Tomatoes Link: '.cyan + movie.tomatoURL + '\n');
+
+                // print movie data obtained from object on command line
+                console.log('           Movie Title: '.cyan + movie.Title);
+                console.log('                  Year: '.cyan + movie.Year);
+                console.log('                  Plot: '.cyan + movie.Plot);
+                console.log('                Actors: '.cyan + movie.Actors);
+                console.log('               Country: '.cyan + movie.Country);
+                console.log('              Language: '.cyan + movie.Language);
+                console.log('           IMDB Rating: '.cyan + movie.imdbRating);
+
+                // loop through the ratings array and check to see if the Rotten Tomatoes rating exists
+                for (let i = 0; i < movie.Ratings.length; i++) {
+                    // if it does, set variable RTRating equal to the Rotten Tomatoes rating value and report
+                    if (movie.Ratings[i].Source === 'Rotten Tomatoes') {
+                        RTRating = movie.Ratings[i].Value;
+                        console.log('Rotten Tomatoes Rating: '.cyan + RTRating);
+                    }
+                }
+                // if no Rotten Tomatoes rating was found, then report that its Not Available
+                if (typeof RTRating === 'undefined') {
+                    console.log('Rotten Tomatoes Rating: '.cyan + 'N/A')
+                }
+                console.log('  Rotten Tomatoes Link: '.cyan + movie.tomatoURL + '\n');
+            } // end else - movie was found
         } // end if - response was successful
     }); // end OMDB request
 } // end movieInfo function
 
 
+
+// READ TXT FILE FOR INSTRUCTIONS FUNCTION \\
 function doWhatSays() {
     fs.readFile('random.txt', 'utf8', function (err, data) {
         console.log(`\nThis is the contents of random.txt:  ${data} \n`);
