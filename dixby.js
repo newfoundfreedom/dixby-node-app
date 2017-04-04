@@ -30,7 +30,7 @@ inquirer.prompt([
     {
         type: 'list',
         message: 'Select Command',
-        choices: ['Tweet Tweet', 'Spotify Song Lookup', 'Movies Info', 'Do What It Says'],
+        choices: ['Tweet Tweet', 'Spotify Song Lookup', 'Movie Info', 'Do What It Says'],
         name: 'choice'
     }
 ]).then(function (data) {
@@ -98,7 +98,7 @@ inquirer.prompt([
             break;
 
         // if user response is 'Movie Info'
-        case 'Movies Info':
+        case 'Movie Info':
             // prompt user to supply a movie title
             inquirer.prompt([
                 {
@@ -264,7 +264,7 @@ function movieInfo(movieTitle) {
     let movieArray = movieTitle.split(' ').join('+');
 
     // Obtain a JSON object utilizing the request module
-    request('http://www.omdbapi.com/?t=' + movieTitle + '&y=&plot=short&tomatoes=true&r=json', function (error, response, body) {
+    request('http://www.omdbapi.com/?t=' + movieArray + '&y=&plot=short&tomatoes=true&r=json', function (error, response, body) {
 
         // If there were no errors and the response code was successful
         if (!error && response.statusCode === 200) {
