@@ -122,7 +122,7 @@ inquirer.prompt([
             break;
 
         case 'Do What It Says':
-            doWhatSays();
+            doWhatItSays();
     } // end switch
 }); // end then
 
@@ -149,8 +149,9 @@ function myTweets(who) {
             throw error;
         }
         else {
-            // Wrap lines specified with the following parameters
-            let wrap = linewrap(75);
+            // console.log(JSON.stringify(tweets, null, 4));
+            console.log('\n >> Here\'s what '.yellow + tweets[0].user.name.yellow.bold + ' has been tweeting lately\n'.yellow)
+
             // Loop through all tweets formatting and displaying them
             for (let i = 0; i < tweets.length; i++) {
                 let timeDate = moment(tweets[i].created_at, 'ddd MMM DD HH:mm:ss Y YYYY'),
@@ -158,11 +159,15 @@ function myTweets(who) {
                     tDate = timeDate.format('L'),
                     tTime = timeDate.format('LT'),
                     tweetText = tweets[i].text;
+
+                // Wrap lines specified with the following parameters
+                let wrap = linewrap(4, 74);
+
                 // display
-                console.log('\n' + tDay.cyan + ', '.cyan + tDate.cyan +
+                console.log('  ' + tDay.cyan + ', '.cyan + tDate.cyan +
                             ' at '.cyan + tTime.cyan);
                 console.log((wrap(tweetText)))
-                console.log('...........................................................................'.gray.bold);
+                console.log('............................................................................\n'.gray.bold);
             } // end for loop through tweets
         } // end else statement (no eroor)
     }); // end twitter .get request
@@ -239,11 +244,11 @@ function spotifySongLookup(songTitle) {
                 }
 
                 //output results to the command line
-                console.log('    Song Title: '.cyan + songName);
-                console.log('     Artist(s): '.cyan + artistsName);
-                console.log('         Album: '.cyan + albumName);
-                console.log('       Preview: '.cyan + previewLink);
-                console.log('...............................................................................................\n'.gray.bold);
+                console.log('  Song Title: '.cyan + songName);
+                console.log('   Artist(s): '.cyan + artistsName);
+                console.log('       Album: '.cyan + albumName);
+                console.log('     Preview: '.cyan + previewLink);
+                console.log('.............................................................................................\n'.gray.bold);
 
             } // end each track for-loop
         } // end else statement if good data is found
@@ -284,33 +289,33 @@ function movieInfo(movieTitle) {
                 // Wrap lines specified with the following parameters
                 let wrap = linewrap(75, {
                     lineBreak: '\r\n',
-                    wrapLineIndent: 24
+                    wrapLineIndent: 26,
                 });
 
                 // print movie data obtained from object on command line
-                console.log('           Movie Title: '.cyan + movie.Title);
-                console.log('                  Year: '.cyan + movie.Year);
-                console.log('                  Plot: '.cyan + (wrap(movie.Plot)));
-                console.log('                Actors: '.cyan + movie.Actors);
-                console.log('               Country: '.cyan + movie.Country);
-                console.log('              Language: '.cyan + movie.Language);
-                console.log('           IMDB Rating: '.cyan + movie.imdbRating);
+                console.log('             Movie Title: '.cyan + movie.Title);
+                console.log('                    Year: '.cyan + movie.Year);
+                console.log('                    Plot: '.cyan + (wrap(movie.Plot)));
+                console.log('                  Actors: '.cyan + movie.Actors);
+                console.log('                 Country: '.cyan + movie.Country);
+                console.log('                Language: '.cyan + movie.Language);
+                console.log('             IMDB Rating: '.cyan + movie.imdbRating);
 
                 // loop through the ratings array and check to see if the Rotten Tomatoes rating exists
                 for (let i = 0; i < movie.Ratings.length; i++) {
                     // if it does, set variable RTRating equal to the Rotten Tomatoes rating value and report
                     if (movie.Ratings[i].Source === 'Rotten Tomatoes') {
                         RTRating = movie.Ratings[i].Value;
-                        console.log('Rotten Tomatoes Rating: '.cyan + RTRating);
+                        console.log('  Rotten Tomatoes Rating: '.cyan + RTRating);
                     } // end if
                 } // end loop
 
                 // if no Rotten Tomatoes rating was found, then report that its Not Available
                 if (typeof RTRating === 'undefined') {
-                    console.log('Rotten Tomatoes Rating: '.cyan + 'N/A')
+                    console.log('  Rotten Tomatoes Rating: '.cyan + 'N/A')
                 } // end if
 
-                console.log('  Rotten Tomatoes Link: '.cyan + movie.tomatoURL + '\n');
+                console.log('    Rotten Tomatoes Link: '.cyan + movie.tomatoURL + '\n');
 
             } // end else - movie was found
         } // end if - response was successful
@@ -318,12 +323,33 @@ function movieInfo(movieTitle) {
 } // end movieInfo function
 
 
-// READ TXT FILE FOR INSTRUCTIONS FUNCTION \\
-function doWhatSays() {
+// READ TXT FILE FOR INSTRUCTIONS FUNCTION //
+function doWhatItSays() {
+
+    // read external file
     fs.readFile('random.txt', 'utf8', function (err, data) {
-        console.log(`\nThis is the contents of random.txt:  ${data} \n`);
-    });
-}
+
+        // assuming that the random file is made up of one line in the format 'command,argument'
+        //   and utilizing one of the following commands: 'my-tweets', 'spotify-this-song' or 'movie-this',
+        //   break the line up utilizing the comma as the separator
+        let command = (data).split(',')[0],
+            arg = (data).split(',')[1];
+
+        // depending on the command called in the external file, run on of the local functions
+        //  with supplied argument
+        switch (command) {
+            case 'my-tweets':
+                myTweets(arg);
+                break;
+            case 'spotify-this-song':
+                spotifySongLookup(arg);
+                break;
+            case 'movie-this':
+                movieInfo(arg);
+
+        }// end switch
+    }); // end read file
+} // end doWhatItSays function
 
 
 
