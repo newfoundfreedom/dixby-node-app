@@ -19,9 +19,11 @@
   "dependencies": {
     "colors": "^1.1.2",
     "inquirer": "^3.0.6",
+    "linewrap": "^0.2.1",
     "moment": "^2.18.1",
     "request": "^2.81.0",
     "spotify": "^0.3.0",
+    "titlecase": "^1.1.2",
     "twitter": "^1.7.0"
   }
 }

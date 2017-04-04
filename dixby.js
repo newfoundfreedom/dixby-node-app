@@ -11,12 +11,16 @@ const keys = require('./keys.js'),
     spotify = require('spotify'),
     request = require('request'),
     colors = require('colors'),
-    moment = require('moment');
+    moment = require('moment'),
+    linewrap = require('linewrap'),
+    toTitleCase = require('titlecase');
+
 
 // Global Variables
 let artistsName,
     resultQty,
-    RTRating;
+    RTRating,
+    tweetWho;
 
 
 // INITIAL USER INTERFACE //////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,23 +30,57 @@ inquirer.prompt([
     {
         type: 'list',
         message: 'Select Command',
-        choices: ['My Tweets', 'Spotify Song Lookup', 'Movies Info', 'Do What It Says'],
-        name: "choice"
+        choices: ['Tweet Tweet', 'Spotify Song Lookup', 'Movies Info', 'Do What It Says'],
+        name: 'choice'
     }
 ]).then(function (data) {
     switch (data.choice) {
+
         // if user chooses 'My Tweets' then ...
-        case 'My Tweets':
-            myTweets();
+        case 'Tweet Tweet':
+            inquirer.prompt([
+                {
+                    message: 'Who\'s tweets would you like to catch up on?',
+                    type: 'list',
+                    choices: ['Donald Trump', 'Barack Obama', 'Tim Cook',
+                        'Elon Musk', 'Sundar Pichai', 'Bill Gates', 'Joel Roberts'],
+                    name: 'who'
+                }
+            ]).then(function (data) {
+                switch (data.who) {
+                    case 'Donald Trump':
+                        tweetWho = 'realDonaldTrump';
+                        break;
+                    case 'Barack Obama':
+                        tweetWho = 'BarackObama';
+                        break;
+                    case 'Tim Cook':
+                        tweetWho = 'tim_cook';
+                        break;
+                    case 'Elon Musk':
+                        tweetWho = 'elonmusk';
+                        break;
+                    case 'Sundar Pichai':
+                        tweetWho = 'sundarpichai';
+                        break;
+                    case 'Bill Gates':
+                        tweetWho = 'BillGates';
+                        break;
+                    case 'Joel Roberts':
+                        tweetWho = 'newfoundfreedom';
+                }
+                myTweets(tweetWho);
+            });
             break;
+
         // if user chooses 'Spotify Song Lookup' then ...
         case 'Spotify Song Lookup':
             // prompt user to supply a song title
             inquirer.prompt([
                 {
-                    message: "What's the song title?",
-                    type: "input",
-                    name: "title",
+                    message: 'What\'s the song title?',
+                    type: 'input',
+                    name: 'title',
                     // check to ensure that user didn't just hit enter
                     validate: function validTitle(title) {
                         if (title === '') {
@@ -52,20 +90,21 @@ inquirer.prompt([
                         return title !== '';
                     }
                 }
-                // once a valid response has been give - pass that response into the spotifySongLookup function
+            // once a valid response has been give - pass that response into the spotifySongLookup function
             ]).then(function (song_data) {
                 let songTitle = song_data.title;
                 spotifySongLookup(songTitle);
             });
             break;
+
         // if user response is 'Movie Info'
         case 'Movies Info':
             // prompt user to supply a movie title
             inquirer.prompt([
                 {
-                    message: "What movie would you like me to look up?",
-                    type: "input",
-                    name: "title",
+                    message: 'What movie would you like me to look up?',
+                    type: 'input',
+                    name: 'title',
                     // check to ensure that user didn't just hit enter
                     validate: function validTitle(title) {
                         if (title === '') {
@@ -81,9 +120,9 @@ inquirer.prompt([
                 movieInfo(movieTitle);
             });
             break;
+
         case 'Do What It Says':
             doWhatSays();
-
     } // end switch
 }); // end then
 
@@ -91,39 +130,49 @@ inquirer.prompt([
 // FUNCTION OPTIONS ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // TWITTER FUNCTION //
-function myTweets() {
-
+function myTweets(who) {
+    // setup keys for Twitter
     let client = new twitter({
         consumer_key: keys.twitterKeys.consumer_key,
         consumer_secret: keys.twitterKeys.consumer_secret,
         access_token_key: keys.twitterKeys.access_token_key,
         access_token_secret: keys.twitterKeys.access_token_secret
     });
-
+    // set parameters for twitter request
     let params = {
-        screen_name: 'newfoundfreedom',
+        screen_name: who,
         count: 20
     };
-
+    // request 20 most recent tweets
     client.get('statuses/user_timeline', params, function (error, tweets, response) {
         if (error) {
             throw error;
         }
         else {
+            // Wrap lines specified with the following parameters
+            let wrap = linewrap(75);
+            // Loop through all tweets formatting and displaying them
             for (let i = 0; i < tweets.length; i++) {
-                let timeDate = moment(tweets[i].created_at, 'ddd MMM DD HH:mm:ss Y YYYY').format('LLL');
+                let timeDate = moment(tweets[i].created_at, 'ddd MMM DD HH:mm:ss Y YYYY'),
+                    tDay = timeDate.format('dddd'),
+                    tDate = timeDate.format('L'),
+                    tTime = timeDate.format('LT'),
                     tweetText = tweets[i].text;
-                console.log('\n' + timeDate.cyan + '\n' + tweetText)
-            }
-        }
-    });
-}
+                // display
+                console.log('\n' + tDay.cyan + ', '.cyan + tDate.cyan +
+                            ' at '.cyan + tTime.cyan);
+                console.log((wrap(tweetText)))
+                console.log('...........................................................................'.gray.bold);
+            } // end for loop through tweets
+        } // end else statement (no eroor)
+    }); // end twitter .get request
+} // myTweets function
 
 
 // SPOTIFY FUNCTION //
-// function searches Spotify for user specified song.  If results are found, then the top 3 songs will be shown.
-function spotifySongLookup(songTitle) {
+//  function searches Spotify for user specified song.  If results are found, then the top 3 songs will be shown.
 
+function spotifySongLookup(songTitle) {
     // query spotify for song specified by user
     spotify.search({type: 'track', query: songTitle}, function (err, data) {
         // on error - display the error message
@@ -155,12 +204,12 @@ function spotifySongLookup(songTitle) {
             }
             // if 3 or more songs were found, then limit the results to the top 3 songs
             else if (tracksFoundQty >= 3) {
-                console.log('\n  >> Here are the top 3 results for "'.cyan + songTitle.cyan.bold + '"\n'.cyan);
+                console.log('\n  >> Here are the top 3 results for "'.yellow + (toTitleCase(songTitle)).yellow.bold + '"\n'.yellow);
                 resultQty = 3;
             }
             // if 1 or 2 songs are found, then limit results to the number found
             else if (tracksFoundQty !== 0) {
-                console.log('\n    Here are the top results for \''.cyan + songTitle.cyan.bold + '\'\n');
+                console.log('\n    Here are the top results for \''.yellow + songTitle.yellow.bold + '\'\n');
                 resultQty = tracksFoundQty;
             }
 
@@ -203,7 +252,7 @@ function spotifySongLookup(songTitle) {
 
 
 // OMDB FUNCTION //
-// function searches OMDB for user specified movie.  If results are found, then movie data is shown.
+//  function searches OMDB for user specified movie.  If results are found, then movie data is shown.
 function movieInfo(movieTitle) {
 
     // If movie title is more than one word, then place a '+' between each for URL call
@@ -227,14 +276,21 @@ function movieInfo(movieTitle) {
                 // set object to movie variable
                 let movie = JSON.parse(body);
 
+                // if movie is not Mr Nobody, then show message for user movie
                 if (movieTitle !== 'Mr Nobody') {
-                    console.log('\n >> Here is the information I found for "'.cyan + movieTitle.cyan.bold + '"\n'.cyan)
+                    console.log('\n >> Here is the information I found for "'.yellow + (toTitleCase(movieTitle)).yellow.bold + '"\n'.yellow)
                 }
+
+                // Wrap lines specified with the following parameters
+                let wrap = linewrap(75, {
+                    lineBreak: '\r\n',
+                    wrapLineIndent: 24
+                });
 
                 // print movie data obtained from object on command line
                 console.log('           Movie Title: '.cyan + movie.Title);
                 console.log('                  Year: '.cyan + movie.Year);
-                console.log('                  Plot: '.cyan + movie.Plot);
+                console.log('                  Plot: '.cyan + (wrap(movie.Plot)));
                 console.log('                Actors: '.cyan + movie.Actors);
                 console.log('               Country: '.cyan + movie.Country);
                 console.log('              Language: '.cyan + movie.Language);
@@ -246,13 +302,16 @@ function movieInfo(movieTitle) {
                     if (movie.Ratings[i].Source === 'Rotten Tomatoes') {
                         RTRating = movie.Ratings[i].Value;
                         console.log('Rotten Tomatoes Rating: '.cyan + RTRating);
-                    }
-                }
+                    } // end if
+                } // end loop
+
                 // if no Rotten Tomatoes rating was found, then report that its Not Available
                 if (typeof RTRating === 'undefined') {
                     console.log('Rotten Tomatoes Rating: '.cyan + 'N/A')
-                }
+                } // end if
+
                 console.log('  Rotten Tomatoes Link: '.cyan + movie.tomatoURL + '\n');
+
             } // end else - movie was found
         } // end if - response was successful
     }); // end OMDB request
