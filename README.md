@@ -1,7 +1,11 @@
 # DIXBY (your very own node butler)
 
 *dixby is a command-line function (run with 'node dixby') that serves as a personal assistant for specific requests.*
-
+<br>
+[See Dixby in Action here](img/Dixby-in-action.jpg)
+ 
+ <br>
+ 
 ## Dixby's main functions are: 
   * **Tweet Tweet** - utilize this to catch up on the latest tweets of highly influential people
   * **Spotify Song Lookup**  - search and recieve the top 3 results for any song
@@ -27,4 +31,3 @@
   * [spotify](https://www.npmjs.com/package/spotify) - yup...you guessed it...how Dixby interfaces with Spotify
   * [request](https://www.npmjs.com/package/request) - think of this as an HTTP switch-board-operator
   
-[DIXBY]: https://www.dropbox.com/s/6k8ww6p4x6vsr5r/Dixby-in-action.jpg?dl=0 "Dixby in action - BOOM!"
