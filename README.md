@@ -2,8 +2,7 @@
 
 *dixby is a command-line function (run with 'node dixby') that serves as a personal assistant for specific requests.*
 <br>
-[See Dixby in Action here](img/Dixby-in-action.jpg)
- 
+![](img/Dixby-in-action.jpg)
  <br>
  
 ## Dixby's main functions are: 
